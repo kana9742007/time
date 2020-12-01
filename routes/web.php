@@ -13,11 +13,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+Route::get('/', function () {
+    return view('time');
+});
+
 Route::get('/{id}', function () {
     return view('time');
 });
 
-Route::get('/{any}', function() {
+Route::get('/admin/{any}', function() {
     return view('admin/layouts');
 })->where('any', '.*');
 

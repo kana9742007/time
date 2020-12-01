@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Topic;
-use App\Models\Comment;
+use App\Models\TopicConfirm;
 use Illuminate\Http\Request;
-use App\Http\Resources\Topic AS TopicResource;
 
-
-class TopicController extends Controller
+class TopicConfirmController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -17,7 +14,7 @@ class TopicController extends Controller
      */
     public function index()
     {
-        return TopicResource::collection(Topic::all());
+        //
     }
 
     /**
@@ -38,32 +35,27 @@ class TopicController extends Controller
      */
     public function store(Request $request)
     {
-        $topic = new Topic;
-        $topic->title = $request->input('title', '');
-        $topic->content = $request->input('content', '');
-        $topic->show_time = $request->input('show_time', '');
-
-        $topic->save();
+        //
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Topic  $topic
+     * @param  \App\Models\TopicConfirm  $topicConfirm
      * @return \Illuminate\Http\Response
      */
-    public function show(Topic $topic)
+    public function show(TopicConfirm $topicConfirm)
     {
-        return new TopicResource($topic);
+        //
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Topic  $topic
+     * @param  \App\Models\TopicConfirm  $topicConfirm
      * @return \Illuminate\Http\Response
      */
-    public function edit(Topic $topic)
+    public function edit(TopicConfirm $topicConfirm)
     {
         //
     }
@@ -72,26 +64,22 @@ class TopicController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Topic  $topic
+     * @param  \App\Models\TopicConfirm  $topicConfirm
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Topic $topic)
+    public function update(Request $request, TopicConfirm $topicConfirm)
     {
-        $topic->title = $request->input('title', '');
-        $topic->content = $request->input('content', '');
-        $topic->show_time = $request->input('show_time', '');
-
-        $topic->save();
+        //
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Topic  $topic
+     * @param  \App\Models\TopicConfirm  $topicConfirm
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Topic $topic)
+    public function destroy(TopicConfirm $topicConfirm)
     {
-        $topic->delete();
+        //
     }
 }

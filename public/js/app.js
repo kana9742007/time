@@ -1920,14 +1920,30 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
-      item: null
+      item: null,
+      onAirTimeCheck: false,
+      onAirTime: '',
+      diffTime: '',
+      diffHour: '',
+      diffMinute: '',
+      diffSec: '',
+      theHour: '',
+      theMinute: '',
+      isShown: false,
+      setTime: '',
+      nowDateTimes: ''
     };
   },
-  created: function created() {},
-  mounted: function mounted() {
+  created: function created() {
     this.getItem();
   },
   methods: {
@@ -1936,17 +1952,58 @@ __webpack_require__.r(__webpack_exports__);
 
       axios.get('/api/topics/' + this.$route.params.id).then(function (res) {
         _this.item = res.data.data;
-
-        _this.countScroll();
       })["catch"](function (error) {
         console.info(error);
       });
+      this.goTime();
     },
-    countScroll: function countScroll() {
-      var target = document.getElementById("target");
-      console.log(target);
-      var x = target.scrollLeft;
-      document.getElementById("output").innerHTML = x;
+    countTime: function countTime() {
+      this.nowDateTimes = new Date(); // 今の時間
+
+      var nowFullYear = this.nowDateTimes.getFullYear();
+      var nowMonth = this.nowDateTimes.getMonth();
+      var nowDate = this.nowDateTimes.getDate();
+      var thisTime = this.item.show_time; // 目標時間
+
+      this.theHour = thisTime.slice(11, 13);
+      this.theMinute = thisTime.slice(14, 16);
+      this.setTime = new Date(nowFullYear, nowMonth, nowDate, this.theHour, this.theMinute); // 計算
+
+      this.diffTime = this.setTime - this.nowDateTimes;
+
+      if (this.diffTime < 0) {
+        var addDayTime = Math.floor(this.diffTime + 60 * 60 * 24 * 1000);
+        this.diffSec = Math.floor(addDayTime / 1000);
+        this.diffHour = Math.floor(this.diffSec / (60 * 60));
+        this.diffMinute = Math.floor((this.diffSec - this.diffHour * 60 * 60) / 60);
+        this.diffSec -= this.diffHour * 60 * 60 + this.diffMinute * 60;
+        this.isShown = true;
+        this.openArticle();
+      } else {
+        this.diffSec = Math.floor(this.diffTime / 1000);
+        this.diffHour = Math.floor(this.diffSec / (60 * 60));
+        this.diffMinute = Math.floor((this.diffSec - this.diffHour * 60 * 60) / 60);
+        this.diffSec -= this.diffHour * 60 * 60 + this.diffMinute * 60;
+        this.isShown = true;
+        this.openArticle();
+      }
+    },
+    openArticle: function openArticle() {
+      if (this.nowDateTimes > this.setTime && this.nowDateTimes < this.setTime.setHours(this.setTime.getHours() + 1)) {
+        this.onAirTimeCheck = true;
+
+        if (this.onAirTimeCheck) {
+          console.log('open');
+        }
+      } else {
+        this.onAirTimeCheck = false;
+      }
+    },
+    goTime: function goTime() {
+      var self = this;
+      setInterval(function () {
+        self.countTime();
+      }, 1000);
     }
   }
 });
@@ -1969,34 +2026,29 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
-      item: null,
+      items: [],
       timeflag: false,
-      updated: false
+      updated: false,
+      item: null
     };
   },
   mounted: function mounted() {
-    this.getItem();
+    this.getItems();
   },
   methods: {
-    getItem: function getItem() {
+    getItems: function getItems() {
       var _this = this;
 
-      axios.get('/api/topics/' + this.$route.params.id).then(function (res) {
-        _this.item = res.data.data;
-      })["catch"](function (error) {
-        console.info(error);
+      axios.get('/api/topics/').then(function (res) {
+        _this.items = res.data.data;
       });
     }
+  },
+  created: function created() {
+    console.log(this.items);
   }
 });
 
@@ -2011,10 +2063,6 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-//
-//
 //
 //
 //
@@ -2050,7 +2098,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return {
       item: null,
       editFlg: false,
-      updated: false
+      changeTime: '',
+      fixTime: '',
+      theHour: '',
+      theMinute: ''
     };
   },
   mounted: function mounted() {
@@ -2062,26 +2113,65 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       axios.get('/api/topics/' + this.$route.params.id).then(function (res) {
         _this.item = res.data.data;
+
+        _this.replaseTime(_this.item);
       })["catch"](function (error) {
         console.info(error);
       });
-      console.log(this.item.show_time);
-      console.log(_typeof(this.item.show_time));
+    },
+    replaseTime: function replaseTime(item) {
+      var thisTime = item.show_time; // 目標時間
+
+      console.log(thisTime);
+      this.theHour = thisTime.slice(11, 13);
+      this.theMinute = thisTime.slice(14, 16);
+    },
+    setTime: function setTime() {
+      var toDay = new Date();
+      var year = String(toDay.getFullYear());
+      var month = String("0" + (toDay.getMonth() + 1)).slice(-2);
+      var day = String("0" + toDay.getDate()).slice(-2);
+      this.fixTime = String(this.item.show_time.replace(":", ""));
+      this.changeTime = year + month + day + this.fixTime + '00';
     },
     onUpdate: function onUpdate() {
       var _this2 = this;
 
+      this.setTime();
       axios.put('/api/topics/' + this.item.id, {
         title: this.item.title,
         content: this.item.content,
-        show_time: this.item.show_time
+        show_time: this.changeTime
       }).then(function (res) {
         _this2.editFlg = false;
-        _this2.updated = true;
+
+        _this2.$router.go({
+          path: _this2.$router.currentRoute.path,
+          force: true
+        });
+
         console.log('update');
       })["catch"](function (error) {
         console.info(error);
       });
+    },
+    checkDetail: function checkDetail() {
+      var _this3 = this;
+
+      this.setTime();
+      axios.put('/api/topics/' + this.item.id, {
+        title: this.item.title,
+        content: this.item.content,
+        show_time: this.changeTime
+      }).then(function (res) {
+        _this3.editFlg = false;
+        console.log('update');
+      })["catch"](function (error) {
+        console.info(error);
+      });
+      var thisUrl = location.href;
+      var nexttUrl = thisUrl.replace("admin/detail/", "");
+      window.location = nexttUrl;
     }
   }
 });
@@ -2097,8 +2187,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
 //
 //
 //
@@ -2128,22 +2216,28 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       saved: false,
       title: '',
       content: '',
-      show_time: ''
+      show_time: '',
+      changeTime: ''
     };
   },
   methods: {
     create: function create() {
       var _this = this;
 
-      console.log(this.show_time);
-      console.log(_typeof(this.show_time));
+      var toDay = new Date();
+      var year = String(toDay.getFullYear());
+      var month = String("0" + (toDay.getMonth() + 1)).slice(-2);
+      var day = String("0" + toDay.getDate()).slice(-2);
+      var fixTime = String(this.show_time.replace(":", ""));
+      this.changeTime = year + month + day + fixTime + '00';
+      console.log(this.changeTime);
       axios.post('/api/topics', {
         title: this.title,
         content: this.content,
-        show_time: this.show_time
+        show_time: this.changeTime
       }).then(function (res) {
         _this.title = '';
-        _this.content = '';
+        _this.contents = '';
         _this.show_time = '';
         _this.saved = true;
         console.log('created');
@@ -2217,7 +2311,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "#app {\n  margin: 0;\n  overflow: hidden;\n}\n.card_wrapp {\n  width: 80%;\n  overflow-x: scroll;\n  max-width: 900px;\n  margin: 100px auto;\n}\n.card_wrapp .card_body {\n  position: relative;\n  display: inline-block;\n}\n.card_wrapp .card_body .card_title {\n  color: #696969;\n  font-size: 20px;\n  position: absolute;\n  right: 0px;\n  font-weight: bold;\n  letter-spacing: 1em;\n}\n.card_wrapp .card_body .card_text {\n  padding-top: 60px;\n  -ms-writing-mode: tb-rl;\n      writing-mode: vertical-rl;\n  -webkit-text-orientation: upright;\n          text-orientation: upright;\n  white-space: pre-wrap;\n  line-height: 2;\n  color: #696969;\n  font-size: 16px;\n  font-weight: 300;\n  letter-spacing: 0.2em;\n}\n.card_wrapp .card_body .card_time {\n  -ms-writing-mode: tb-rl;\n      writing-mode: vertical-rl;\n  color: #696969;\n}", ""]);
+exports.push([module.i, ".detai_content {\n  margin: 0;\n  overflow: hidden;\n}\n.detai_content .card_wrapp {\n  width: 80%;\n  overflow-x: scroll;\n  max-width: 900px;\n  margin: 100px auto;\n}\n.detai_content .card_wrapp .card_body {\n  position: relative;\n  display: inline-block;\n}\n.detai_content .card_wrapp .card_body .card_title {\n  color: #696969;\n  font-size: 20px;\n  position: absolute;\n  right: 0px;\n  font-weight: bold;\n  letter-spacing: 1em;\n}\n.detai_content .card_wrapp .card_body .card_text {\n  padding-top: 60px;\n  line-height: 2;\n  color: #696969;\n  font-size: 16px;\n  font-weight: 300;\n  letter-spacing: 0.2em;\n}\n.detai_content .card_wrapp .card_body .card_time {\n  color: #696969;\n}\n.detai_content .diff_wrap .diff_body {\n  margin-top: 10rem;\n  text-align: center;\n  transition: opacity 1s;\n}\n.detai_content .diff_wrap .diff_body .diff_text {\n  margin: 5% 0px;\n  font-size: 10rem;\n  color: #DBDBDB;\n}\n.detai_content .diff_wrap .diff_body .btn-border {\n  border-radius: 0;\n  margin: 0 auto;\n  position: relative;\n  padding: 10px 0px;\n  display: block;\n  width: 150px;\n  color: #DBDBDB;\n  transition: all 0.3s;\n}\n.detai_content .diff_wrap .diff_body .btn-border:before {\n  top: 0;\n  left: 0;\n  position: absolute;\n  width: 100%;\n  height: 2px;\n  content: \"\";\n  transition: all 0.3s;\n  background: #DBDBDB;\n}\n.detai_content .diff_wrap .diff_body .btn-border:after {\n  right: 0;\n  bottom: 0;\n  position: absolute;\n  width: 100%;\n  height: 2px;\n  content: \"\";\n  transition: all 0.3s;\n  background: #DBDBDB;\n}\n.detai_content .diff_wrap .diff_body .btn-border:hover {\n  color: #707070;\n}\n.detai_content .diff_wrap .diff_body .btn-border:hover:before, .detai_content .diff_wrap .diff_body .btn-border:hover:after {\n  width: 0;\n  background: #707070;\n}", ""]);
 
 // exports
 
@@ -2236,7 +2330,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, ".card-text {\n  white-space: pre-wrap;\n}", ""]);
+exports.push([module.i, ".top_container {\n  text-align: center;\n}\n.top_container h1 {\n  margin-top: 10rem;\n  font-size: 15rem;\n  color: #DBDBDB;\n}\n.top_container p {\n  color: #696969;\n}", ""]);
 
 // exports
 
@@ -2255,7 +2349,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../node_modules/css-
 
 
 // module
-exports.push([module.i, ".card-text {\n  white-space: pre-wrap;\n}", ""]);
+exports.push([module.i, ".card-body {\n  width: 80%;\n  max-width: 900px;\n  margin: 0 auto;\n  position: relative;\n  display: inline-block;\n}\n.card-body .card_title {\n  color: #696969;\n  font-size: 20px;\n  font-weight: bold;\n}\n.card-body .card_text {\n  padding-top: 20px;\n  white-space: pre-wrap;\n  line-height: 2;\n  color: #696969;\n  font-size: 16px;\n  font-weight: 300;\n  letter-spacing: 0.2em;\n}\n.card-body .card_time {\n  color: #696969;\n}\n.card-footer {\n  display: flex;\n  margin-top: 10px;\n}\n.card-footer .add-left {\n  margin-left: 10px;\n}", ""]);
 
 // exports
 
@@ -2293,7 +2387,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../node_modules/css-
 
 
 // module
-exports.push([module.i, ".navbar {\n  position: fixed;\n  left: 0px;\n  right: 0px;\n  height: 100vh;\n  width: 100px;\n  background: #f5f5f5;\n  padding-top: 20px;\n  padding-left: 20px;\n}\n.navbar ul {\n  list-style: none;\n  padding: 0px;\n}\n.navbar ul li {\n  padding: 10px 10px;\n  cursor: pointer;\n}\n.navbar ul li a {\n  color: #696969;\n  font-weight: bold;\n}", ""]);
+exports.push([module.i, ".navbar {\n  position: fixed;\n  left: 0px;\n  right: 0px;\n  height: 100vh;\n  width: 200px;\n  background: #f5f5f5;\n  padding-top: 20px;\n}\n.navbar ul {\n  list-style: none;\n  padding: 0px;\n}\n.navbar ul li {\n  cursor: pointer;\n  display: inline-block;\n  width: 100%;\n}\n.navbar ul li a {\n  display: block;\n  width: calc(100% - 50px);\n  padding: 10px 0px 10px 50px;\n  color: #696969;\n  font-weight: bold;\n  transition: 0.3s;\n}\n.navbar ul li a:hover {\n  background-color: #ffffff;\n  color: #DBDBDB;\n}\n.navbar ul li .router-link-active {\n  background-color: #ffffff;\n  color: #DBDBDB;\n}", ""]);
 
 // exports
 
@@ -20743,25 +20837,62 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", [
-    _vm.item
-      ? _c("div", { staticClass: "card_wrapp", attrs: { id: "target" } }, [
-          _c("div", { staticClass: "card_body", attrs: { id: "output" } }, [
-            _c("h1", { staticClass: "card_title" }, [
-              _vm._v(_vm._s(_vm.item.title))
-            ]),
-            _vm._v(" "),
-            _c("div", { staticClass: "card_text" }, [
-              _vm._v(_vm._s(_vm.item.content))
-            ]),
-            _vm._v(" "),
-            _c("div", { staticClass: "card_time" }, [
-              _vm._v(_vm._s(_vm.item.show_time))
+  return _vm.item
+    ? _c("div", { staticClass: "detai_content" }, [
+        _vm.onAirTimeCheck
+          ? _c("div", { staticClass: "card_wrapp" }, [
+              _c("div", { staticClass: "card_body" }, [
+                _c("h1", { staticClass: "card_title" }, [
+                  _vm._v(_vm._s(_vm.item.title))
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "card_text" }, [
+                  _vm._v(_vm._s(_vm.item.content))
+                ])
+              ])
             ])
-          ])
-        ])
-      : _vm._e()
-  ])
+          : _c("div", { staticClass: "diff_wrap" }, [
+              _c(
+                "div",
+                {
+                  directives: [
+                    {
+                      name: "show",
+                      rawName: "v-show",
+                      value: _vm.isShown,
+                      expression: "isShown"
+                    }
+                  ],
+                  staticClass: "diff_body"
+                },
+                [
+                  _c("p", [
+                    _vm._v(
+                      "公開時間:　" +
+                        _vm._s(this.theHour) +
+                        "：" +
+                        _vm._s(this.theMinute)
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _c("h1", { staticClass: "diff_text" }, [
+                    _vm._v(
+                      _vm._s(this.diffHour) +
+                        "：" +
+                        _vm._s(this.diffMinute) +
+                        "：" +
+                        _vm._s(this.diffSec)
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _c("a", { staticClass: "btn-border", attrs: { href: "/" } }, [
+                    _vm._v("HOME")
+                  ])
+                ]
+              )
+            ])
+      ])
+    : _vm._e()
 }
 var staticRenderFns = []
 render._withStripped = true
@@ -20770,10 +20901,10 @@ render._withStripped = true
 
 /***/ }),
 
-/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c&":
-/*!******************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c& ***!
-  \******************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c&lang=true&":
+/*!****************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c&lang=true& ***!
+  \****************************************************************************************************************************************************************************************************************/
 /*! exports provided: render, staticRenderFns */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -20785,29 +20916,20 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c("div", [
-    _vm.item
-      ? _c("div", { staticClass: "card" }, [
-          _c("div", { staticClass: "card-body" }, [
-            _c("div", [
-              _c("h1", { staticClass: "card-title" }, [
-                _vm._v(_vm._s(_vm.item.title))
-              ]),
-              _vm._v(" "),
-              _c("div", { staticClass: "card-text" }, [
-                _vm._v(_vm._s(_vm.item.content))
-              ]),
-              _vm._v(" "),
-              _c("div", { staticClass: "card-text" }, [
-                _vm._v(_vm._s(_vm.item.show_time))
-              ])
-            ])
-          ])
-        ])
-      : _vm._e()
-  ])
+  return _vm._m(0)
 }
-var staticRenderFns = []
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "top_container" }, [
+      _c("h1", [_vm._v("TIME")]),
+      _vm._v(" "),
+      _c("p", [_vm._v("公開記事はありません")])
+    ])
+  }
+]
 render._withStripped = true
 
 
@@ -20832,30 +20954,25 @@ var render = function() {
   return _c("div", [
     _vm.item
       ? _c("div", { staticClass: "card" }, [
-          _vm.updated
-            ? _c(
-                "div",
-                {
-                  staticClass: "alert alert-primary",
-                  attrs: { role: "alert" }
-                },
-                [_vm._v("\n        更新しました\n    ")]
-              )
-            : _vm._e(),
-          _vm._v(" "),
           _c("div", { staticClass: "card-body" }, [
             !_vm.editFlg
               ? _c("div", [
-                  _c("h1", { staticClass: "card-title" }, [
-                    _vm._v(_vm._s(_vm.item.title))
+                  _c("h1", { staticClass: "card_title" }, [
+                    _vm._v("タイトル：" + _vm._s(_vm.item.title))
                   ]),
                   _vm._v(" "),
-                  _c("div", { staticClass: "card-text" }, [
-                    _vm._v(_vm._s(_vm.item.content))
+                  _c("div", { staticClass: "card_text" }, [
+                    _vm._v("本文：" + _vm._s(_vm.item.content))
                   ]),
                   _vm._v(" "),
-                  _c("div", { staticClass: "card-text" }, [
-                    _vm._v(_vm._s(_vm.item.show_time))
+                  _c("div", { staticClass: "card_text" }, [
+                    _vm._v(
+                      "公開時間：" +
+                        _vm._s(_vm.theHour) +
+                        ":" +
+                        _vm._s(_vm.theMinute) +
+                        " "
+                    )
                   ])
                 ])
               : _c("form", [
@@ -20919,7 +21036,7 @@ var render = function() {
                       ],
                       staticClass: "form-control",
                       attrs: {
-                        type: "datatime",
+                        type: "time",
                         name: "show_time",
                         id: "TopicTime"
                       },
@@ -20942,7 +21059,7 @@ var render = function() {
               ? _c(
                   "button",
                   {
-                    staticClass: "btn btn-light text-right",
+                    staticClass: "btn btn-light",
                     on: {
                       click: function($event) {
                         _vm.editFlg = true
@@ -20953,12 +21070,18 @@ var render = function() {
                 )
               : _c(
                   "button",
-                  {
-                    staticClass: "btn btn-light text-right",
-                    on: { click: _vm.onUpdate }
-                  },
+                  { staticClass: "btn btn-light", on: { click: _vm.onUpdate } },
                   [_vm._v("更新")]
-                )
+                ),
+            _vm._v(" "),
+            _c(
+              "button",
+              {
+                staticClass: "btn btn-light add-left",
+                on: { click: _vm.checkDetail }
+              },
+              [_vm._v("確認")]
+            )
           ])
         ])
       : _vm._e()
@@ -21061,7 +21184,7 @@ var render = function() {
             }
           ],
           staticClass: "form-control time",
-          attrs: { type: "datatime", id: "TopicTime", rows: "3" },
+          attrs: { type: "time", id: "TopicTime", rows: "3" },
           domProps: { value: _vm.show_time },
           on: {
             input: function($event) {
@@ -21120,14 +21243,11 @@ var render = function() {
       _c("ul", { staticClass: "navbar-nav mr-auto" }, [
         _c(
           "li",
-          { staticClass: "nav-item" },
+          { class: { active: _vm.activeMenu === "list" } },
           [
             _c(
               "router-link",
-              {
-                staticClass: "nav-link active",
-                attrs: { to: { name: "list" } }
-              },
+              { staticClass: "nav-link", attrs: { to: { name: "list" } } },
               [_vm._v("一覧")]
             )
           ],
@@ -21136,14 +21256,11 @@ var render = function() {
         _vm._v(" "),
         _c(
           "li",
-          { staticClass: "nav-item" },
+          { class: { active: _vm.activeMenu === "create" } },
           [
             _c(
               "router-link",
-              {
-                staticClass: "nav-link active",
-                attrs: { to: { name: "create" } }
-              },
+              { staticClass: "nav-link", attrs: { to: { name: "create" } } },
               [_vm._v("新規作成")]
             )
           ],
@@ -36646,7 +36763,7 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _Top_vue_vue_type_template_id_5c6cb28c___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Top.vue?vue&type=template&id=5c6cb28c& */ "./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c&");
+/* harmony import */ var _Top_vue_vue_type_template_id_5c6cb28c_lang_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Top.vue?vue&type=template&id=5c6cb28c&lang=true& */ "./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c&lang=true&");
 /* harmony import */ var _Top_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Top.vue?vue&type=script&lang=js& */ "./resources/js/components/Top.vue?vue&type=script&lang=js&");
 /* empty/unused harmony star reexport *//* harmony import */ var _Top_vue_vue_type_style_index_0_lang_sass___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Top.vue?vue&type=style&index=0&lang=sass& */ "./resources/js/components/Top.vue?vue&type=style&index=0&lang=sass&");
 /* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
@@ -36660,8 +36777,8 @@ __webpack_require__.r(__webpack_exports__);
 
 var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__["default"])(
   _Top_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
-  _Top_vue_vue_type_template_id_5c6cb28c___WEBPACK_IMPORTED_MODULE_0__["render"],
-  _Top_vue_vue_type_template_id_5c6cb28c___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  _Top_vue_vue_type_template_id_5c6cb28c_lang_true___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _Top_vue_vue_type_template_id_5c6cb28c_lang_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
   false,
   null,
   null,
@@ -36706,19 +36823,19 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c&":
-/*!************************************************************************!*\
-  !*** ./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c& ***!
-  \************************************************************************/
+/***/ "./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c&lang=true&":
+/*!**********************************************************************************!*\
+  !*** ./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c&lang=true& ***!
+  \**********************************************************************************/
 /*! exports provided: render, staticRenderFns */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Top_vue_vue_type_template_id_5c6cb28c___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./Top.vue?vue&type=template&id=5c6cb28c& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c&");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Top_vue_vue_type_template_id_5c6cb28c___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Top_vue_vue_type_template_id_5c6cb28c_lang_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./Top.vue?vue&type=template&id=5c6cb28c&lang=true& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Top.vue?vue&type=template&id=5c6cb28c&lang=true&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Top_vue_vue_type_template_id_5c6cb28c_lang_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Top_vue_vue_type_template_id_5c6cb28c___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Top_vue_vue_type_template_id_5c6cb28c_lang_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
 

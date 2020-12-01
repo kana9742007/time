@@ -3,6 +3,8 @@ require('./bootstrap');
 window.Vue = require('vue'); //Vue.jsの読み込み
 
 import VueRouter from 'vue-router'; // Vue Routerの読み込み
+
+
 Vue.use(VueRouter); // Vue.jsで、Vue Routerを使うように設定
 
 //vue-routerによるルーティング設定

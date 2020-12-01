@@ -14,7 +14,7 @@
       </div>
       <div class="form-group">
         <label for="TopicTime">公開時間</label>
-        <input type="datatime" class="form-control time" id="TopicTime" rows="3" v-model="show_time">
+        <input type="time" class="form-control time" id="TopicTime" rows="3" v-model="show_time">
       </div>
       <button type="submit" class="btn btn-primary" @click.prevent="create">登録</button>
     </form>
@@ -29,20 +29,26 @@ export default {
             title: '',
             content: '',
             show_time: '',
+            changeTime: '',
         }
     },
     methods: {
       create() {
-        console.log(this.show_time);
-        console.log((typeof this.show_time) )
+        var toDay = new Date();
+        var year = String(toDay.getFullYear());
+        var month = String("0"+(toDay.getMonth() + 1)).slice(-2);
+        var day = String("0"+toDay.getDate()).slice(-2);
+        var fixTime = String(this.show_time.replace(":" ,""));
+        this.changeTime = year + month + day + fixTime + '00';
+        console.log(this.changeTime);
         axios.post('/api/topics', {
           title: this.title,
           content: this.content,
-          show_time: this.show_time,
+          show_time: this.changeTime,
         })
         .then((res) => {
           this.title = '';
-          this.content = '';
+          this.contents = '';
           this.show_time = '';
           this.saved = true;
           console.log('created');
@@ -50,7 +56,8 @@ export default {
         .catch(error => {
           console.info(error)
         })
-      }
+      },
+
     }
 }
 </script>

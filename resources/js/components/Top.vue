@@ -1,44 +1,44 @@
-<template>
-  <div>
-    <div class="card" v-if="item">
-      <div class="card-body">
-        <div>
-          <h1 class="card-title">{{item.title}}</h1>
-          <div class="card-text">{{item.content}}</div>
-          <div class="card-text">{{item.show_time}}</div>
-        </div>
-      </div>
-    </div>
+<template lang="">
+  <div class="top_container">
+    <h1>TIME</h1>
+    <p>公開記事はありません</p>
   </div>
 </template>
 
 <script>
 export default {
-    data() {
-        return {
-            item: null,
-            timeflag: false,
-            updated: false,
-        }
+  data() {
+      return {
+        items: [],
+        timeflag: false,
+        updated: false,
+        item: null,
+      }
+  },
+  mounted() {
+      this.getItems();
+  },
+  methods: {
+    getItems() {
+      axios.get('/api/topics/')
+      .then( (res) => {
+        this.items = res.data.data;
+      });
     },
-    mounted() {
-        this.getItem();
-    },
-    methods: {
-      getItem() {
-          axios.get('/api/topics/' + this.$route.params.id)
-          .then( ( res ) => {
-              this.item = res.data.data;
-          })
-          .catch(error => {
-            console.info(error)
-          })
-      },
-    }
+  },
+  created(){
+    console.log(this.items);
+  },
 }
 </script>
 
 <style lang="sass">
-.card-text
-  white-space: pre-wrap
+.top_container
+  text-align: center
+  h1
+    margin-top: 10rem
+    font-size: 15rem
+    color: #DBDBDB
+  p
+    color: #696969
 </style>
