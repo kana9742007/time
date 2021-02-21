@@ -51,7 +51,6 @@ export default {
           this.contents = '';
           this.show_time = '';
           this.saved = true;
-          console.log('created');
         })
         .catch(error => {
           console.info(error)

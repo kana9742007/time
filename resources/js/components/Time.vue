@@ -103,17 +103,28 @@ export default {
   overflow: hidden
   .card_wrapp
     width: 80%
-    overflow-x: scroll
+    // overflow-x: scroll
     max-width: 900px
     margin: 100px auto
+    @keyframes fadein-bottom
+      0%
+        opacity: 0
+        transform: translateY(20px)
+      100%
+        opacity: 1
+        transform: translateY(0)
     .card_body
       position: relative
       display: inline-block
+      animation-name: fadein-bottom
+      animation-duration: 1.5s
+      animation-timing-function: ease-out
+      animation-fill-mode: forwards
       .card_title
         color: #696969
         font-size: 20px
-        position: absolute
-        right: 0px
+        // position: absolute
+        // right: 0px
         font-weight: bold
         letter-spacing: 1em
       .card_text

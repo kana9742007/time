@@ -25,5 +25,3 @@ Route::get('/{id}', function () {
 Route::get('/admin/{any}', function() {
     return view('admin/layouts');
 })->where('any', '.*');
-
-// Route::get('/create', 'App\Http\Controllers\TopicController@index');
